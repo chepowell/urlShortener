@@ -10,24 +10,22 @@ export default function Home() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     
-    
     if (!url.trim()) {
       setError('Please enter a URL')
       return
     }
-    
+
     // Auto-prepend https:// if no protocol is specified
     let processedUrl = url.trim()
     if (!processedUrl.startsWith('http://') && !processedUrl.startsWith('https://')) {
       processedUrl = `https://${processedUrl}`
     }
-    
+
     setError('')
     setShortUrl(null)
 
-
     try {
-      const res = await fetch(`http://localhost:5050/shorten`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/shorten`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ originalUrl: processedUrl }),
