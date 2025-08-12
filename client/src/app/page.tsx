@@ -47,6 +47,7 @@ export default function Home() {
         setError('An unexpected error occurred')
       }
     }
+
   }
 
   return (

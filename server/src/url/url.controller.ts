@@ -7,7 +7,6 @@ export class UrlController {
 
   @Post()
   async createShortUrl(@Body() body: { originalUrl: string }) {
-    console.log('[Backend] Received body:', body);
 
     const { originalUrl } = body;
 
@@ -17,6 +16,7 @@ export class UrlController {
     }
 
     const slug = await this.urlService.generateSlug(originalUrl);
+    
     return { slug, shortUrl: `http://localhost:5050/${slug}` };
   }
 }

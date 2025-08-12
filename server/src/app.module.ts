@@ -10,6 +10,8 @@ import { UrlModule } from './url/url.module';
     }),
     UrlModule,
   ],
+
   controllers: [AppController],
 })
 export class AppModule {}
+
