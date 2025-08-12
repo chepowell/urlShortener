@@ -4,17 +4,57 @@ import { useState } from 'react'
 
 export default function Home() {
   const [url, setUrl] = useState('')
+  const [shortUrl, setShortUrl] = useState<string | null>(null)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    console.log('Submitted:', url)
+    
+    if (!url.trim()) {
+      setError('Please enter a URL')
+      return
+    }
+
+    // Auto-prepend https:// if no protocol is specified
+    let processedUrl = url.trim()
+    if (!processedUrl.startsWith('http://') && !processedUrl.startsWith('https://')) {
+      processedUrl = `https://${processedUrl}`
+    }
+
+    setError('')
+    setShortUrl(null)
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/shorten`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ originalUrl: processedUrl }),
+      })
+
+      if (!res.ok) {
+        const errorText = await res.text()
+        throw new Error(`Server error: ${res.status} ${errorText}`)
+      }
+
+      const data: { slug: string; shortUrl: string } = await res.json()
+      console.log('Response data:', data)
+      setShortUrl(data.shortUrl)
+    } catch (err) {
+      if (err instanceof Error) {
+        console.error('[URL Shorten Error]', err)
+        setError(err.message)
+      } else {
+        setError('An unexpected error occurred')
+      }
+    }
+
   }
 
   return (
     <main className="flex flex-col items-center mt-10">
       <form onSubmit={handleSubmit} className="flex gap-4">
         <input
-          type="url"
+          type="text"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
           placeholder="Enter URL"
@@ -24,6 +64,17 @@ export default function Home() {
           Shorten
         </button>
       </form>
+
+      {shortUrl && (
+        <p className="mt-4">
+          Short URL:{' '}
+          <a href={shortUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+            {shortUrl}
+          </a>
+        </p>
+      )}
+
+      {error && <p className="text-red-500 mt-2">{error}</p>}
     </main>
   )
 }

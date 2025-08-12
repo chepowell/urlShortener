@@ -7,13 +7,17 @@ export class UrlController {
 
   @Post()
   async createShortUrl(@Body() body: { originalUrl: string }) {
+
     const { originalUrl } = body;
 
     if (!originalUrl || !originalUrl.startsWith('http')) {
+      console.log('[Backend] Invalid URL:', originalUrl);
       throw new BadRequestException('Invalid URL');
     }
 
     const slug = await this.urlService.generateSlug(originalUrl);
-    return { slug, shortUrl: `http://localhost:5000/${slug}` };
+    
+    return { slug, shortUrl: `http://localhost:5050/${slug}` };
   }
 }
+
