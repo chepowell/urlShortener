@@ -1,16 +1,15 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UrlService {
-  private urlMap = new Map<string, string>();
+  constructor(private configService: ConfigService) {}
 
   async generateSlug(originalUrl: string): Promise<string> {
-    const slug = Math.random().toString(36).substring(2, 8);
-    this.urlMap.set(slug, originalUrl);
-    return slug;
-  }
+    const { nanoid } = await import('nanoid'); // ← dynamic import here
+    const slug = nanoid(6);
 
-  getOriginalUrl(slug: string): string | undefined {
-    return this.urlMap.get(slug);
+    const baseUrl = this.configService.get<string>('BASE_URL') || 'http://localhost:5053';
+    return `${baseUrl}/${slug}`;
   }
 }

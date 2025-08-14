@@ -4,7 +4,7 @@ services:
   server:
     build: ./server
     ports:
-      - "5000:5050" # host:container
+      - "5053:3000" # host:container
     volumes:
       - ./server:/app
     depends_on:
