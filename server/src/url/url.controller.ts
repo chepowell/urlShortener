@@ -15,13 +15,22 @@ import { Response, Request } from 'express';
 export class UrlController {
   constructor(private readonly urlService: UrlService) {}
 
-  @Post('/shorten')
-  async shortenUrl(@Body('originalUrl') originalUrl: string, @Req() req: Request) {
-    const userId = req.auth?.userId || req.user?.id;
+  // @Post('/shorten')
+  // async shortenUrl(@Body('originalUrl') originalUrl: string, @Req() req: Request) {
+  //   const userId = req.auth?.userId || req.user?.id;
 
-    if (!userId) {
-      throw new NotFoundException('User not authenticated');
-    }
+  //   if (!userId) {
+  //     throw new NotFoundException('User not authenticated');
+  //   }
+
+  //   return this.urlService.createShortUrl(originalUrl, userId);
+  // }
+
+  @Post('/shorten')
+  async shortenUrl(
+    @Body('originalUrl') originalUrl: string,
+  ) {
+    const userId = 'default-user'; // Hardcoded for now
 
     return this.urlService.createShortUrl(originalUrl, userId);
   }

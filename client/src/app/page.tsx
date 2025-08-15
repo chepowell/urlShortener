@@ -9,13 +9,12 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    
+
     if (!url.trim()) {
       setError('Please enter a URL')
       return
     }
 
-    // Auto-prepend https:// if no protocol is specified
     let processedUrl = url.trim()
     if (!processedUrl.startsWith('http://') && !processedUrl.startsWith('https://')) {
       processedUrl = `https://${processedUrl}`
@@ -24,8 +23,14 @@ export default function Home() {
     setError('')
     setShortUrl(null)
 
+    const baseApiUrl =
+      process.env.NEXT_PUBLIC_API_URL ||
+      (typeof window !== 'undefined' && window.location.hostname === 'localhost'
+        ? 'http://localhost:5053'
+        : 'http://server:3000') // fallback for Docker internal network
+
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/shorten`, {
+      const res = await fetch(`${baseApiUrl}/shorten`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ originalUrl: processedUrl }),
@@ -47,7 +52,6 @@ export default function Home() {
         setError('An unexpected error occurred')
       }
     }
-
   }
 
   return (
