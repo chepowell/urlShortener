@@ -1,16 +1,40 @@
 import { Injectable } from '@nestjs/common';
+import { nanoid } from 'nanoid';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class UrlService {
-  private urlMap = new Map<string, string>();
+  constructor(private prisma: PrismaService) {}
 
-  async generateSlug(originalUrl: string): Promise<string> {
-    const slug = Math.random().toString(36).substring(2, 8);
-    this.urlMap.set(slug, originalUrl);
-    return slug;
+  async createShortUrl(
+    originalUrl: string,
+    userId: string,
+  ): Promise<{ slug: string; shortUrl: string }> {
+    const slug = nanoid(6);
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    const shortUrl = `${baseUrl}/${slug}`;
+
+    await this.prisma.url.create({
+      data: {
+        originalUrl,
+        slug,
+        createdById: userId,
+      },
+    });
+    
+
+    return { slug, shortUrl };
   }
 
-  getOriginalUrl(slug: string): string | undefined {
-    return this.urlMap.get(slug);
+  async getOriginalUrl(slug: string): Promise<string | null> {
+    const record = await this.prisma.url.findUnique({
+      where: { slug },
+    });
+
+    return record?.originalUrl || null;
+  }
+
+  async getAllUrls() {
+    return this.prisma.url.findMany();
   }
 }

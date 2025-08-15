@@ -1,23 +1,52 @@
-import { Controller, Post, Body, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  Param,
+  Res,
+  NotFoundException,
+  Req,
+} from '@nestjs/common';
 import { UrlService } from './url.service';
+import { Response, Request } from 'express';
 
-@Controller('shorten')
+@Controller()
 export class UrlController {
   constructor(private readonly urlService: UrlService) {}
 
-  @Post()
-  async createShortUrl(@Body() body: { originalUrl: string }) {
+  // @Post('/shorten')
+  // async shortenUrl(@Body('originalUrl') originalUrl: string, @Req() req: Request) {
+  //   const userId = req.auth?.userId || req.user?.id;
 
-    const { originalUrl } = body;
+  //   if (!userId) {
+  //     throw new NotFoundException('User not authenticated');
+  //   }
 
-    if (!originalUrl || !originalUrl.startsWith('http')) {
-      console.log('[Backend] Invalid URL:', originalUrl);
-      throw new BadRequestException('Invalid URL');
+  //   return this.urlService.createShortUrl(originalUrl, userId);
+  // }
+
+  @Post('/shorten')
+  async shortenUrl(
+    @Body('originalUrl') originalUrl: string,
+  ) {
+    const userId = 'default-user'; // Hardcoded for now
+
+    return this.urlService.createShortUrl(originalUrl, userId);
+  }
+
+  @Get('/:slug')
+  async redirect(@Param('slug') slug: string, @Res() res: Response) {
+    const originalUrl = await this.urlService.getOriginalUrl(slug);
+    if (originalUrl) {
+      return res.redirect(originalUrl);
+    } else {
+      throw new NotFoundException('Slug not found');
     }
+  }
 
-    const slug = await this.urlService.generateSlug(originalUrl);
-    
-    return { slug, shortUrl: `http://localhost:5050/${slug}` };
+  @Get('/urls')
+  async getAll() {
+    return this.urlService.getAllUrls();
   }
 }
-
