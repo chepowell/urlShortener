@@ -6,10 +6,12 @@ import {
   Param,
   Res,
   NotFoundException,
+  BadRequestException,
   Req,
 } from '@nestjs/common';
 import { UrlService } from './url.service';
 import { Response, Request } from 'express';
+import { isURL } from 'validator';
 
 @Controller()
 export class UrlController {
@@ -29,8 +31,12 @@ export class UrlController {
   @Post('/shorten')
   async shortenUrl(
     @Body('originalUrl') originalUrl: string,
-  ) {
-    const userId = 'default-user'; // Hardcoded for now
+  ): Promise<{ slug: string; shortUrl: string }> {
+    const userId = 'default-user'; // or from auth
+
+    if (!isURL(originalUrl, { require_protocol: true })) {
+      throw new BadRequestException('Invalid URL');
+    }
 
     return this.urlService.createShortUrl(originalUrl, userId);
   }
