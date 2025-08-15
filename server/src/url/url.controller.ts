@@ -45,10 +45,10 @@ export class UrlController {
     const originalUrl = await this.urlService.getOriginalUrl(slug);
 
     if (originalUrl) {
-      console.log(`[Redirect] Found original URL: ${originalUrl}`);
       return res.redirect(originalUrl);
     } else {
-      throw new NotFoundException('Slug not found');
+      // 👇 Replace the JSON error with a redirect to the frontend 404 page
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/404`);
     }
   }
 
