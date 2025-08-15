@@ -20,11 +20,8 @@ export class UrlController {
   async shortenUrl(
     @Body('originalUrl') originalUrl: string,
   ): Promise<{ slug: string; shortUrl: string }> {
-    const userId = 'default-user'; // Replace with real user ID when auth is added
+    const userId = 'default-user';
 
-    console.log('[Controller] Received originalUrl:', originalUrl);
-
-    // Use relaxed validation (allow underscore, allow protocol-less URLs)
     if (
       !isURL(originalUrl, {
         require_protocol: true,
@@ -40,6 +37,12 @@ export class UrlController {
     return this.urlService.createShortUrl(originalUrl, userId);
   }
 
+  // ✅ MOVE THIS ABOVE :slug
+  @Get('/urls')
+  async getAll() {
+    return this.urlService.getAllUrls();
+  }
+
   @Get('/:slug')
   async redirect(@Param('slug') slug: string, @Res() res: Response) {
     const originalUrl = await this.urlService.getOriginalUrl(slug);
@@ -47,13 +50,8 @@ export class UrlController {
     if (originalUrl) {
       return res.redirect(originalUrl);
     } else {
-      // 👇 Replace the JSON error with a redirect to the frontend 404 page
       return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/404`);
     }
   }
-
-  @Get('/urls')
-  async getAll() {
-    return this.urlService.getAllUrls();
-  }
 }
+

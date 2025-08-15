@@ -9,40 +9,40 @@ export default function Home() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-
+  
     if (!url.trim()) {
       setError('Please enter a URL')
       return
     }
-
+  
     let processedUrl = url.trim()
     if (!processedUrl.startsWith('http://') && !processedUrl.startsWith('https://')) {
       processedUrl = `https://${processedUrl}`
     }
-
+  
     setError('')
     setShortUrl(null)
-
+  
     const baseApiUrl =
       process.env.NEXT_PUBLIC_API_URL ||
       (typeof window !== 'undefined' && window.location.hostname === 'localhost'
         ? 'http://localhost:5053'
         : 'http://server:3000') // fallback for Docker internal network
-
+  
     try {
       const res = await fetch(`${baseApiUrl}/shorten`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ originalUrl: processedUrl }),
       })
-
+  
+      // 🔽 This is the new error-handling block
       if (!res.ok) {
-        const errorText = await res.text()
-        throw new Error(`Server error: ${res.status} ${errorText}`)
+        const errorData = await res.json()
+        throw new Error(errorData.message || 'Something went wrong')
       }
-
+  
       const data: { slug: string; shortUrl: string } = await res.json()
-      console.log('Response data:', data)
       setShortUrl(data.shortUrl)
     } catch (err) {
       if (err instanceof Error) {
