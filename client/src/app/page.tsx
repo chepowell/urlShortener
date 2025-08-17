@@ -6,42 +6,43 @@ export default function Home() {
   const [url, setUrl] = useState('')
   const [shortUrl, setShortUrl] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [copied, setCopied] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-  
+
     if (!url.trim()) {
       setError('Please enter a URL')
       return
     }
-  
+
     let processedUrl = url.trim()
     if (!processedUrl.startsWith('http://') && !processedUrl.startsWith('https://')) {
       processedUrl = `https://${processedUrl}`
     }
-  
+
     setError('')
     setShortUrl(null)
-  
+    setCopied(false)
+
     const baseApiUrl =
       process.env.NEXT_PUBLIC_API_URL ||
       (typeof window !== 'undefined' && window.location.hostname === 'localhost'
         ? 'http://localhost:5053'
-        : 'http://server:3000') // fallback for Docker internal network
-  
+        : 'http://server:3000')
+
     try {
       const res = await fetch(`${baseApiUrl}/shorten`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ originalUrl: processedUrl }),
       })
-  
-      // 🔽 This is the new error-handling block
+
       if (!res.ok) {
         const errorData = await res.json()
         throw new Error(errorData.message || 'Something went wrong')
       }
-  
+
       const data: { slug: string; shortUrl: string } = await res.json()
       setShortUrl(data.shortUrl)
     } catch (err) {
@@ -51,6 +52,14 @@ export default function Home() {
       } else {
         setError('An unexpected error occurred')
       }
+    }
+  }
+
+  const handleCopy = async () => {
+    if (shortUrl) {
+      await navigator.clipboard.writeText(shortUrl)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
     }
   }
 
@@ -70,12 +79,25 @@ export default function Home() {
       </form>
 
       {shortUrl && (
-        <p className="mt-4">
-          Short URL:{' '}
-          <a href={shortUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
-            {shortUrl}
-          </a>
-        </p>
+        <div className="mt-4 flex items-center gap-2">
+          <p>
+            Short URL:{' '}
+            <a
+              href={shortUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 underline"
+            >
+              {shortUrl}
+            </a>
+          </p>
+          <button
+            onClick={handleCopy}
+            className="bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-sm"
+          >
+            {copied ? 'Copied!' : 'Copy'}
+          </button>
+        </div>
       )}
 
       {error && <p className="text-red-500 mt-2">{error}</p>}
