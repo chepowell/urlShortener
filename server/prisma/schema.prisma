@@ -25,5 +25,9 @@ model Url {
   createdById String?
   createdBy   User?     @relation("UserUrls", fields: [createdById], references: [id])
 
+  visits      Int      @default(0)
+
   @@index([slug])
 }
+
+

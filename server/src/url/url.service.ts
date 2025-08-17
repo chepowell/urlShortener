@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { nanoid } from 'nanoid';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
 export class UrlService {
@@ -27,11 +27,19 @@ export class UrlService {
   }
 
   async getOriginalUrl(slug: string): Promise<string | null> {
-    const record = await this.prisma.url.findUnique({
+    const url = await this.prisma.url.findUnique({
       where: { slug },
     });
-
-    return record?.originalUrl || null;
+  
+    if (!url) return null;
+  
+    // Increment the visit count
+    // await this.prisma.url.update({
+    //   where: { slug },
+    //   data: { visits: { increment: 1 } },
+    // });
+  
+    return url.originalUrl;
   }
 
   async getAllUrls() {
