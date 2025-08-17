@@ -7,20 +7,22 @@ type UrlEntry = {
   originalUrl: string
   slug: string
   createdAt: string
+  visits: number
 }
 
 export default function UrlListPage() {
   const [urls, setUrls] = useState<UrlEntry[]>([])
   const [error, setError] = useState<string | null>(null)
-  const [editingSlug, setEditingSlug] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [newSlug, setNewSlug] = useState<string>('')
-  const [copiedSlug, setCopiedSlug] = useState<string | null>(null)
+
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5053'
 
   useEffect(() => {
     const fetchUrls = async () => {
       try {
-        const res = await fetch('http://localhost:5053/urls')
-        if (!res.ok) throw new Error('Failed to fetch')
+        const res = await fetch(`${apiUrl}/urls`)
+        if (!res.ok) throw new Error('Failed to fetch URLs')
         const data = await res.json()
         setUrls(data)
       } catch (err) {
@@ -30,39 +32,51 @@ export default function UrlListPage() {
     }
 
     fetchUrls()
-  }, [])
+  }, [apiUrl])
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5053'
-
-  const handleCopy = async (fullUrl: string, slug: string) => {
-    try {
-      await navigator.clipboard.writeText(fullUrl)
-      setCopiedSlug(slug)
-      setTimeout(() => setCopiedSlug(null), 2000)
-    } catch (err) {
-      console.error('Copy failed', err)
-    }
+  const handleEditClick = (id: string, currentSlug: string) => {
+    setEditingId(id)
+    setNewSlug(currentSlug)
   }
 
-  const handleEditSubmit = async (id: string) => {
+  const handleSaveClick = async (id: string, originalSlug: string) => {
+    if (newSlug.trim() === originalSlug) {
+      setEditingId(null)
+      return
+    }
+
     try {
-      const res = await fetch(`${baseUrl}/urls/${id}/slug`, {
+      const res = await fetch(`${apiUrl}/${id}/slug`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ slug: newSlug }),
       })
 
-      if (!res.ok) throw new Error('Failed to update slug')
+      if (!res.ok) {
+        const data = await res.json()
+        alert(data.message || 'Slug must be unique')
+        return
+      }
 
-      const updatedUrl = await res.json()
+      const updated = await res.json()
       setUrls((prev) =>
-        prev.map((u) => (u.id === id ? { ...u, slug: updatedUrl.slug } : u))
+        prev.map((url) =>
+          url.id === id ? { ...url, slug: updated.slug } : url
+        )
       )
-      setEditingSlug(null)
+      setEditingId(null)
       setNewSlug('')
     } catch (err) {
-      alert('Slug must be unique.')
-      console.error(err)
+      alert('Error updating slug')
+    }
+  }
+
+  const handleCopy = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url)
+      alert('Copied to clipboard!')
+    } catch (err) {
+      alert('Failed to copy')
     }
   }
 
@@ -74,76 +88,86 @@ export default function UrlListPage() {
       {urls.length === 0 ? (
         <p>No URLs found.</p>
       ) : (
-        <table className="min-w-full border border-gray-200">
+        <table className="min-w-full border border-gray-300 table-auto">
           <thead>
             <tr className="bg-gray-100 text-left">
               <th className="py-2 px-4">Original URL</th>
               <th className="py-2 px-4">Short URL</th>
               <th className="py-2 px-4">Slug</th>
               <th className="py-2 px-4">Created</th>
+              <th className="py-2 px-4">Visits</th>
+              <th className="py-2 px-4">Actions</th>
             </tr>
           </thead>
           <tbody>
             {urls.map((url) => {
-              const fullShortUrl = `${baseUrl}/${url.slug}`
+              const shortUrl = `${apiUrl}/${url.slug}`
+
               return (
                 <tr key={url.id} className="border-t">
-                  <td className="py-2 px-4">{url.originalUrl}</td>
-                  <td className="py-2 px-4 flex items-center gap-2">
+                  <td className="py-2 px-4 max-w-xs truncate">{url.originalUrl}</td>
+
+                  <td className="py-2 px-4">
                     <a
-                      href={fullShortUrl}
+                      href={shortUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-blue-600 underline"
                     >
-                      {fullShortUrl}
+                      {shortUrl}
                     </a>
-                    <button
-                      onClick={() => handleCopy(fullShortUrl, url.slug)}
-                      className="text-sm text-gray-500 border border-gray-300 rounded px-2 py-1 hover:bg-gray-100"
-                    >
-                      {copiedSlug === url.slug ? 'Copied!' : 'Copy'}
-                    </button>
                   </td>
-                  <td className="py-2 px-4">
-                    {editingSlug === url.id ? (
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={newSlug}
-                          onChange={(e) => setNewSlug(e.target.value)}
-                          className="border px-2 py-1 rounded"
-                        />
-                        <button
-                          onClick={() => handleEditSubmit(url.id)}
-                          className="text-sm bg-green-500 text-white px-2 py-1 rounded"
-                        >
-                          Save
-                        </button>
-                        <button
-                          onClick={() => setEditingSlug(null)}
-                          className="text-sm bg-gray-300 px-2 py-1 rounded"
-                        >
-                          Cancel
-                        </button>
-                      </div>
+
+                  <td className="py-2 px-4 w-32">
+                    {editingId === url.id ? (
+                      <input
+                        value={newSlug}
+                        onChange={(e) => setNewSlug(e.target.value)}
+                        className="border rounded px-2 py-1 w-full"
+                      />
                     ) : (
-                      <>
-                        {url.slug}{' '}
+                      <span className="inline-block w-full">{url.slug}</span>
+                    )}
+                  </td>
+
+                  <td className="py-2 px-4">
+                    {new Date(url.createdAt).toLocaleString()}
+                  </td>
+
+                  <td className="py-2 px-4 text-center">{url.visits}</td>
+
+                  <td className="py-2 px-4">
+                    <div className="flex gap-2 flex-wrap">
+                      {editingId === url.id ? (
+                        <>
+                          <button
+                            onClick={() => handleSaveClick(url.id, url.slug)}
+                            className="bg-green-500 text-white px-2 py-1 rounded text-sm"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => setEditingId(null)}
+                            className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
                         <button
-                          onClick={() => {
-                            setEditingSlug(url.id)
-                            setNewSlug(url.slug)
-                          }}
-                          className="ml-2 text-sm text-blue-500"
+                          onClick={() => handleEditClick(url.id, url.slug)}
+                          className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
                         >
                           Edit
                         </button>
-                      </>
-                    )}
-                  </td>
-                  <td className="py-2 px-4">
-                    {new Date(url.createdAt).toLocaleString()}
+                      )}
+                      <button
+                        onClick={() => handleCopy(shortUrl)}
+                        className="bg-indigo-600 text-white px-2 py-1 rounded text-sm"
+                      >
+                        Copy
+                      </button>
+                    </div>
                   </td>
                 </tr>
               )
