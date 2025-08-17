@@ -1,106 +1,180 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
-export default function Home() {
-  const [url, setUrl] = useState('')
-  const [shortUrl, setShortUrl] = useState<string | null>(null)
-  const [error, setError] = useState('')
-  const [copied, setCopied] = useState(false)
+type UrlEntry = {
+  id: string
+  originalUrl: string
+  slug: string
+  createdAt: string
+  visits: number
+}
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+export default function UrlListPage() {
+  const [urls, setUrls] = useState<UrlEntry[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [newSlug, setNewSlug] = useState<string>('')
 
-    if (!url.trim()) {
-      setError('Please enter a URL')
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5053'
+
+  useEffect(() => {
+    const fetchUrls = async () => {
+      try {
+        const res = await fetch(`${apiUrl}/urls`)
+        if (!res.ok) throw new Error('Failed to fetch URLs')
+        const data = await res.json()
+        setUrls(data)
+      } catch (err) {
+        console.error(err)
+        setError('Failed to load URLs')
+      }
+    }
+
+    fetchUrls()
+  }, [apiUrl])
+
+  const handleEditClick = (id: string, currentSlug: string) => {
+    setEditingId(id)
+    setNewSlug(currentSlug)
+  }
+
+  const handleSaveClick = async (id: string, originalSlug: string) => {
+    if (newSlug.trim() === originalSlug) {
+      setEditingId(null)
       return
     }
 
-    let processedUrl = url.trim()
-    if (!processedUrl.startsWith('http://') && !processedUrl.startsWith('https://')) {
-      processedUrl = `https://${processedUrl}`
-    }
-
-    setError('')
-    setShortUrl(null)
-    setCopied(false)
-
-    const baseApiUrl =
-      process.env.NEXT_PUBLIC_API_URL ||
-      (typeof window !== 'undefined' && window.location.hostname === 'localhost'
-        ? 'http://localhost:5053'
-        : 'http://server:3000')
-
     try {
-      const res = await fetch(`${baseApiUrl}/shorten`, {
-        method: 'POST',
+      const res = await fetch(`${apiUrl}/${id}/slug`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ originalUrl: processedUrl }),
+        body: JSON.stringify({ slug: newSlug }),
       })
 
       if (!res.ok) {
-        const errorData = await res.json()
-        throw new Error(errorData.message || 'Something went wrong')
+        const data = await res.json()
+        alert(data.message || 'Slug must be unique')
+        return
       }
 
-      const data: { slug: string; shortUrl: string } = await res.json()
-      setShortUrl(data.shortUrl)
+      const updated = await res.json()
+      setUrls((prev) =>
+        prev.map((url) =>
+          url.id === id ? { ...url, slug: updated.slug } : url
+        )
+      )
+      setEditingId(null)
+      setNewSlug('')
     } catch (err) {
-      if (err instanceof Error) {
-        console.error('[URL Shorten Error]', err)
-        setError(err.message)
-      } else {
-        setError('An unexpected error occurred')
-      }
+      alert('Error updating slug')
     }
   }
 
-  const handleCopy = async () => {
-    if (shortUrl) {
-      await navigator.clipboard.writeText(shortUrl)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+  const handleCopy = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url)
+      alert('Copied to clipboard!')
+    } catch (err) {
+      alert('Failed to copy')
     }
   }
 
   return (
-    <main className="flex flex-col items-center mt-10">
-      <form onSubmit={handleSubmit} className="flex gap-4">
-        <input
-          type="text"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="Enter URL"
-          className="border p-2 rounded w-80"
-        />
-        <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
-          Shorten
-        </button>
-      </form>
+    <div className="p-8">
+      <h1 className="text-2xl font-bold mb-4">All Shortened URLs</h1>
+      {error && <p className="text-red-500">{error}</p>}
 
-      {shortUrl && (
-        <div className="mt-4 flex items-center gap-2">
-          <p>
-            Short URL:{' '}
-            <a
-              href={shortUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 underline"
-            >
-              {shortUrl}
-            </a>
-          </p>
-          <button
-            onClick={handleCopy}
-            className="bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-sm"
-          >
-            {copied ? 'Copied!' : 'Copy'}
-          </button>
-        </div>
+      {urls.length === 0 ? (
+        <p>No URLs found.</p>
+      ) : (
+        <table className="min-w-full border border-gray-300 table-auto">
+          <thead>
+            <tr className="bg-gray-100 text-left">
+              <th className="py-2 px-4">Original URL</th>
+              <th className="py-2 px-4">Short URL</th>
+              <th className="py-2 px-4">Slug</th>
+              <th className="py-2 px-4">Created</th>
+              <th className="py-2 px-4">Visits</th>
+              <th className="py-2 px-4">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {urls.map((url) => {
+              const shortUrl = `${apiUrl}/${url.slug}`
+
+              return (
+                <tr key={url.id} className="border-t">
+                  <td className="py-2 px-4 max-w-xs truncate">{url.originalUrl}</td>
+
+                  <td className="py-2 px-4">
+                    <a
+                      href={shortUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 underline"
+                    >
+                      {shortUrl}
+                    </a>
+                  </td>
+
+                  <td className="py-2 px-4 w-32">
+                    {editingId === url.id ? (
+                      <input
+                        value={newSlug}
+                        onChange={(e) => setNewSlug(e.target.value)}
+                        className="border rounded px-2 py-1 w-full"
+                      />
+                    ) : (
+                      <span className="inline-block w-full">{url.slug}</span>
+                    )}
+                  </td>
+
+                  <td className="py-2 px-4">
+                    {new Date(url.createdAt).toLocaleString()}
+                  </td>
+
+                  <td className="py-2 px-4 text-center">{url.visits}</td>
+
+                  <td className="py-2 px-4">
+                    <div className="flex gap-2 flex-wrap">
+                      {editingId === url.id ? (
+                        <>
+                          <button
+                            onClick={() => handleSaveClick(url.id, url.slug)}
+                            className="bg-green-500 text-white px-2 py-1 rounded text-sm"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => setEditingId(null)}
+                            className="bg-gray-500 text-white px-2 py-1 rounded text-sm"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => handleEditClick(url.id, url.slug)}
+                          className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
+                        >
+                          Edit
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleCopy(shortUrl)}
+                        className="bg-indigo-600 text-white px-2 py-1 rounded text-sm"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
       )}
-
-      {error && <p className="text-red-500 mt-2">{error}</p>}
-    </main>
+    </div>
   )
 }

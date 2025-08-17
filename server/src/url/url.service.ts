@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { nanoid } from 'nanoid';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -45,4 +45,13 @@ export class UrlService {
   async getAllUrls() {
     return this.prisma.url.findMany();
   }
+
+  async updateSlug(id: string, slug: string) {
+    return this.prisma.url.update({
+      where: { id },
+      data: { slug },
+    })
+  }
+  
+  
 }
