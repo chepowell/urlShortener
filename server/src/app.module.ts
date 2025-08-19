@@ -1,13 +1,31 @@
-// src/app.module.ts
-
-import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
-import { AppController } from './app.controller';
+// server/src/app.module.ts
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config'; // ✅ import ConfigModule
 import { UrlModule } from './url/url.module';
-import { PrismaModule } from '../prisma/prisma.module';
+import { AuthModule } from './auth/auth.module';
+import { UserMiddleware } from './middleware/user.middleware';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), PrismaModule, UrlModule],
-  controllers: [AppController],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true, // ✅ makes ConfigService available app-wide
+    }),
+    UrlModule,
+    AuthModule,
+  ],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(UserMiddleware)
+      .exclude(
+        { path: 'auth/signup', method: RequestMethod.POST },
+        { path: 'auth/signin', method: RequestMethod.POST }
+      )
+      .forRoutes(
+        { path: 'shorten', method: RequestMethod.POST },
+        { path: 'urls', method: RequestMethod.GET },
+        { path: ':slug/slug', method: RequestMethod.PATCH }
+      );
+  }
+}

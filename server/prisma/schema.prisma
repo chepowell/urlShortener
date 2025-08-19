@@ -12,6 +12,7 @@ datasource db {
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
+  passwordHash String
   urls      Url[]    @relation("UserUrls") // This is the list of URLs the user created
   createdAt DateTime @default(now())
 }

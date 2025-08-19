@@ -15,6 +15,7 @@ export default function UrlListPage() {
   const [error, setError] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [newSlug, setNewSlug] = useState<string>('')
+  const [sortByVisits, setSortByVisits] = useState<boolean>(false)
 
   const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5053'
 
@@ -80,12 +81,25 @@ export default function UrlListPage() {
     }
   }
 
+  const sortedUrls = sortByVisits
+    ? [...urls].sort((a, b) => b.visits - a.visits)
+    : urls
+
   return (
     <div className="p-8">
-      <h1 className="text-2xl font-bold mb-4">All Shortened URLs</h1>
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-2xl font-bold">All Shortened URLs</h1>
+        <button
+          onClick={() => setSortByVisits((prev) => !prev)}
+          className="bg-gray-200 hover:bg-gray-300 px-3 py-1 rounded text-sm"
+        >
+          {sortByVisits ? 'Reset Sort' : 'Sort by Visits (High → Low)'}
+        </button>
+      </div>
+
       {error && <p className="text-red-500">{error}</p>}
 
-      {urls.length === 0 ? (
+      {sortedUrls.length === 0 ? (
         <p>No URLs found.</p>
       ) : (
         <table className="min-w-full border border-gray-300 table-auto">
@@ -100,7 +114,7 @@ export default function UrlListPage() {
             </tr>
           </thead>
           <tbody>
-            {urls.map((url) => {
+            {sortedUrls.map((url) => {
               const shortUrl = `${apiUrl}/${url.slug}`
 
               return (

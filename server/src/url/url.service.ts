@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { nanoid } from 'nanoid';
 import { PrismaService } from '../../prisma/prisma.service';
 
@@ -6,24 +6,24 @@ import { PrismaService } from '../../prisma/prisma.service';
 export class UrlService {
   constructor(private prisma: PrismaService) {}
 
-  async createShortUrl(
-    originalUrl: string,
-    userId: string,
-  ): Promise<{ slug: string; shortUrl: string }> {
-    const slug = nanoid(6);
-    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
-    const shortUrl = `${baseUrl}/${slug}`;
+  async createShortUrl(originalUrl: string, userId: string) {
+    const slug = nanoid(6)
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000'
+    const shortUrl = `${baseUrl}/${slug}`
+    const user = await this.prisma.user.findUnique({ where: { id: userId } })
 
-    await this.prisma.url.create({
+    if (!user) {
+      throw new NotFoundException('User not found')
+    }
+    return this.prisma.url.create({
       data: {
         originalUrl,
         slug,
-        createdById: userId,
+        createdBy: {
+          connect: { id: userId }, 
+        },
       },
-    });
-    
-
-    return { slug, shortUrl };
+    })
   }
 
   async getOriginalUrl(slug: string): Promise<string | null> {
@@ -42,8 +42,11 @@ export class UrlService {
     return url.originalUrl;
   }
 
-  async getAllUrls() {
-    return this.prisma.url.findMany();
+  async getAllUrls(userId: string) {
+    return this.prisma.url.findMany({
+      where: { createdById: userId },
+      orderBy: { visits: 'desc' },
+    })
   }
 
   async updateSlug(id: string, slug: string) {
