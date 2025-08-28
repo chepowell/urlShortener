@@ -1,28 +1,44 @@
-// server/src/url/url.controller.ts
-import { Controller, Get, Post, Patch, Param, Body, Req } from '@nestjs/common';
-import { UrlService } from './url.service';
-import { Request } from 'express';
+import { Controller, Post, Body, Headers, Get, Param, Patch } from '@nestjs/common'
+import { UrlService } from './url.service'
+import { ConfigService } from '@nestjs/config'
 
 @Controller()
 export class UrlController {
-  constructor(private readonly urlService: UrlService) {}
+  constructor(
+    private readonly urlService: UrlService,
+    private readonly config: ConfigService
+  ) {}
 
   @Post('shorten')
-  createShortUrl(@Body() body: { originalUrl: string }, @Req() req: Request) {
-    return this.urlService.createShortUrl(body.originalUrl, (req as any).userId);
+  async createShortUrl(
+    @Body('originalUrl') originalUrl: string,
+    @Headers('x-user-id') userId: string
+  ) {
+    if (!userId) throw new Error('Missing x-user-id header')
+    const result = await this.urlService.create(originalUrl, userId)
+
+    return {
+      shortUrl: `${this.config.get('BASE_URL') || 'http://localhost:3000'}/${result.slug}`,
+    }
   }
 
   @Get('urls')
-  getAllUrls(@Req() req: Request) {
-    return this.urlService.getAllUrls((req as any).userId);
+  async getUrls(@Headers('x-user-id') userId: string) {
+    if (!userId) throw new Error('Missing x-user-id header')
+    return this.urlService.findAllByUser(userId)
   }
 
   @Patch(':id/slug')
-  updateSlug(@Param('id') id: string, @Body('slug') slug: string, @Req() req: Request) {
-    return this.urlService.updateSlug(id, slug);
-  }
-  @Get(':slug')
-  redirectToOriginal(@Param('slug') slug: string) {
-    return this.urlService.getOriginalUrl(slug);
+  async updateSlug(
+    @Param('id') id: string,
+    @Body('newSlug') newSlug: string,
+    @Headers('x-user-id') userId: string
+  ) {
+    if (!userId) throw new Error('Missing x-user-id header')
+    const result = await this.urlService.updateSlug(id, newSlug, userId)
+
+    return {
+      shortUrl: `${this.config.get('BASE_URL') || 'http://localhost:3000'}/${result.slug}`,
+    }
   }
 }

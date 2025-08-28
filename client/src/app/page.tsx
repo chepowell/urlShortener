@@ -1,16 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useUser } from './context/UserContext'
+import { useState } from 'react'
 
 export default function HomePage() {
+  const { userId } = useUser()
   const [url, setUrl] = useState('')
   const [message, setMessage] = useState('')
-  const [userId, setUserId] = useState<string | null>(null)
-
-  useEffect(() => {
-    const id = localStorage.getItem('userId')
-    setUserId(id)
-  }, [])
 
   const handleShorten = async () => {
     if (!url || !userId) {

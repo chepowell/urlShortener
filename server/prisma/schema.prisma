@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -8,27 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  passwordHash String
-  urls      Url[]    @relation("UserUrls") // This is the list of URLs the user created
-  createdAt DateTime @default(now())
+  id       String @id @default(uuid())
+  email    String @unique
+  password String
+  urls     Url[]  @relation("UserUrls")
 }
 
 model Url {
   id          String   @id @default(uuid())
   originalUrl String
   slug        String   @unique
+  visits      Int      @default(0)
   createdAt   DateTime @default(now())
 
-  createdById String?
-  createdBy   User?     @relation("UserUrls", fields: [createdById], references: [id])
-
-  visits      Int      @default(0)
-
-  @@index([slug])
+  createdById String
+  createdBy   User   @relation("UserUrls", fields: [createdById], references: [id])
 }
-
-

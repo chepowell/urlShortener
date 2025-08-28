@@ -15,15 +15,12 @@ export default function Navbar() {
         {userId ? (
           <>
             <Link href="/">Shorten</Link>
-            <Link href="/dashboard">Dashboard</Link>
+            <Link href="/urls">Dashboard</Link>
             <button
-              onClick={() => {
-                logout()
-                setUserId(null)
-              }}
-              className="text-red-500 hover:underline"
+            onClick={() => logout(setUserId)}
+            className="text-red-500 hover:underline"
             >
-              Logout
+            Logout
             </button>
           </>
         ) : (

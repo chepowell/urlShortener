@@ -1,14 +1,14 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useAuth } from '../context/AuthContext'
+import { useUser } from '../context/UserContext'
 import { useState } from 'react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const { setUserId } = useAuth()
+  const { setUserId } = useUser()
   const router = useRouter()
 
   const handleLogin = async (e: React.FormEvent) => {

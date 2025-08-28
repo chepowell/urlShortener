@@ -1,6 +1,7 @@
 // server/src/app.module.ts
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config'; // ✅ import ConfigModule
+import { ThrottlerModule } from '@nestjs/throttler'
 import { UrlModule } from './url/url.module';
 import { AuthModule } from './auth/auth.module';
 import { UserMiddleware } from './middleware/user.middleware';
@@ -14,6 +15,7 @@ import { UserMiddleware } from './middleware/user.middleware';
     AuthModule,
   ],
 })
+
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     consumer

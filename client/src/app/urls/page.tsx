@@ -22,18 +22,27 @@ export default function UrlListPage() {
   useEffect(() => {
     const fetchUrls = async () => {
       try {
-        const res = await fetch(`${apiUrl}/urls`)
+        const userId = localStorage.getItem('userId')
+        if (!userId) throw new Error('User not signed in')
+  
+        const res = await fetch(`${apiUrl}/urls`, {
+          headers: {
+            'x-user-id': userId,
+          },
+        })
+  
         if (!res.ok) throw new Error('Failed to fetch URLs')
+  
         const data = await res.json()
         setUrls(data)
       } catch (err) {
         console.error(err)
-        setError('Failed to load URLs')
+        setError((err as Error).message)
       }
     }
-
+  
     fetchUrls()
-  }, [apiUrl])
+  }, [])
 
   const handleEditClick = (id: string, currentSlug: string) => {
     setEditingId(id)
