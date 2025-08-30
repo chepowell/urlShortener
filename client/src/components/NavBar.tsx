@@ -1,12 +1,19 @@
-// frontend/components/Navbar.tsx
 'use client'
 
 import Link from 'next/link'
+import { useEffect } from 'react'
 import { useUser } from '../app/context/UserContext'
 import { logout } from '@/lib/auth'
 
 export default function Navbar() {
   const { userId, setUserId } = useUser()
+
+  useEffect(() => {
+    const storedUserId = localStorage.getItem('userId')
+    if (storedUserId && !userId) {
+      setUserId(storedUserId)
+    }
+  }, [userId, setUserId])
 
   return (
     <nav className="flex justify-between items-center px-6 py-4 border-b">
@@ -17,10 +24,10 @@ export default function Navbar() {
             <Link href="/">Shorten</Link>
             <Link href="/urls">Dashboard</Link>
             <button
-            onClick={() => logout(setUserId)}
-            className="text-red-500 hover:underline"
+              onClick={() => logout(setUserId)}
+              className="text-red-500 hover:underline"
             >
-            Logout
+              Logout
             </button>
           </>
         ) : (

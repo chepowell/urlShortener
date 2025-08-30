@@ -16,11 +16,11 @@ model User {
 
 model Url {
   id          String   @id @default(uuid())
-  originalUrl String
   slug        String   @unique
-  visits      Int      @default(0)
+  originalUrl String
+  visitCount  Int      @default(0)
   createdAt   DateTime @default(now())
 
-  createdById String
-  createdBy   User   @relation("UserUrls", fields: [createdById], references: [id])
+  userId String
+  user   User   @relation("UserUrls", fields: [userId], references: [id])
 }

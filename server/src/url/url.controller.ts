@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Headers, Get, Param, Patch } from '@nestjs/common'
+import { BadRequestException, Body, Controller, Headers, Post } from '@nestjs/common'
 import { UrlService } from './url.service'
 import { ConfigService } from '@nestjs/config'
 
@@ -9,33 +9,20 @@ export class UrlController {
     private readonly config: ConfigService
   ) {}
 
-  @Post('shorten')
+  @Post('urls')
   async createShortUrl(
-    @Body('originalUrl') originalUrl: string,
+    @Body() body: any,
     @Headers('x-user-id') userId: string
   ) {
-    if (!userId) throw new Error('Missing x-user-id header')
-    const result = await this.urlService.create(originalUrl, userId)
+    const originalUrl = body?.originalUrl
+    console.log('📦 Received originalUrl:', originalUrl)
+    console.log('🧠 x-user-id header:', userId)
 
-    return {
-      shortUrl: `${this.config.get('BASE_URL') || 'http://localhost:3000'}/${result.slug}`,
+    if (!userId || !originalUrl) {
+      throw new BadRequestException('Missing x-user-id header or originalUrl in body')
     }
-  }
 
-  @Get('urls')
-  async getUrls(@Headers('x-user-id') userId: string) {
-    if (!userId) throw new Error('Missing x-user-id header')
-    return this.urlService.findAllByUser(userId)
-  }
-
-  @Patch(':id/slug')
-  async updateSlug(
-    @Param('id') id: string,
-    @Body('newSlug') newSlug: string,
-    @Headers('x-user-id') userId: string
-  ) {
-    if (!userId) throw new Error('Missing x-user-id header')
-    const result = await this.urlService.updateSlug(id, newSlug, userId)
+    const result = await this.urlService.create(originalUrl, userId)
 
     return {
       shortUrl: `${this.config.get('BASE_URL') || 'http://localhost:3000'}/${result.slug}`,

@@ -1,9 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  BadRequestException,
-} from '@nestjs/common'
+import { Body, Controller, Post } from '@nestjs/common'
 import { AuthService } from './auth.service'
 
 @Controller('auth')
@@ -11,20 +6,12 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('signup')
-  async signup(
-    @Body('email') email: string,
-    @Body('password') password: string,
-  ) {
-    if (!email || !password) throw new BadRequestException('Email and password are required')
-    return this.authService.signup(email, password)
+  signup(@Body() body: { email: string; password: string }) {
+    return this.authService.signup(body.email, body.password)
   }
 
   @Post('signin')
-  async signin(
-    @Body('email') email: string,
-    @Body('password') password: string,
-  ) {
-    if (!email || !password) throw new BadRequestException('Email and password are required')
-    return this.authService.signin(email, password)
+  signin(@Body() body: { email: string; password: string }) {
+    return this.authService.signin(body.email, body.password)
   }
 }

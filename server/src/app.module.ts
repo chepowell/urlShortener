@@ -1,21 +1,29 @@
 // server/src/app.module.ts
-import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config'; // ✅ import ConfigModule
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common'
+import { ConfigModule } from '@nestjs/config'
 import { ThrottlerModule } from '@nestjs/throttler'
-import { UrlModule } from './url/url.module';
-import { AuthModule } from './auth/auth.module';
-import { UserMiddleware } from './middleware/user.middleware';
+import { UrlModule } from './url/url.module'
+import { AuthModule } from './auth/auth.module'
+import { UserMiddleware } from './middleware/user.middleware'
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true, // ✅ makes ConfigService available app-wide
+    ConfigModule.forRoot({ isGlobal: true }),
+
+    // ✅ This is the correct Throttler setup
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          limit: 10,
+          ttl: 60,
+        },
+      ],
     }),
+
     UrlModule,
     AuthModule,
   ],
 })
-
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
@@ -25,9 +33,9 @@ export class AppModule {
         { path: 'auth/signin', method: RequestMethod.POST }
       )
       .forRoutes(
-        { path: 'shorten', method: RequestMethod.POST },
+        { path: 'urls', method: RequestMethod.POST },
         { path: 'urls', method: RequestMethod.GET },
         { path: ':slug/slug', method: RequestMethod.PATCH }
-      );
+      )
   }
 }

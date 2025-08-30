@@ -1,6 +1,5 @@
-// app/layout.tsx
 import './globals.css'
-import Navbar from '@/components/Navbar'
+import Navbar from '@/components/NavBar'
 import { UserProvider } from './context/UserContext'
 
 export default function RootLayout({

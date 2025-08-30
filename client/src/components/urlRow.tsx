@@ -1,4 +1,3 @@
-// frontend/components/UrlRow.tsx
 'use client'
 
 import { useState } from 'react'
@@ -35,7 +34,7 @@ export default function UrlRow({ id, slug, originalUrl, visits, onSlugUpdated }:
     if (res.ok) {
       setEditing(false)
       setError('')
-      onSlugUpdated() // Refresh URL list
+      onSlugUpdated()
     } else {
       const data = await res.json()
       setError(data.message || 'Failed to update slug')
