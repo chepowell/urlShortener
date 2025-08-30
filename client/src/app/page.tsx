@@ -1,77 +1,83 @@
+// File: /client/app/page.tsx
 'use client'
 
 import { useState } from 'react'
-import { useUser } from './context/UserContext'
 import { apiFetch } from '@/lib/apiFetch'
+import { useUser } from './context/UserContext'
+import { Copy } from 'lucide-react'
 
-export default function Home() {
+export default function HomePage() {
   const [url, setUrl] = useState('')
   const [shortUrl, setShortUrl] = useState('')
   const [error, setError] = useState('')
+  const [copied, setCopied] = useState(false)
   const { userId } = useUser()
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleShorten = async () => {
     setError('')
     setShortUrl('')
+    setCopied(false)
 
-    if (!url) {
-      setError('Please enter a URL.')
+    try {
+      new URL(url) // ✅ Validate it's a real URL
+    } catch {
+      setError('Please enter a valid URL.')
       return
     }
 
     try {
       const res = await apiFetch('http://localhost:5053/urls', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ originalUrl: url }),
       })
 
-      if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.message || 'Failed to shorten URL')
-      }
-
       const data = await res.json()
+      if (!res.ok) throw new Error(data.message || 'Failed to shorten URL.')
+
       setShortUrl(data.shortUrl)
     } catch (err: any) {
       setError(err.message)
     }
   }
 
-  return (
-    <div className="max-w-xl mx-auto mt-10 p-4">
-      <h1 className="text-3xl font-bold mb-6">Shorten Your URL</h1>
-      <form onSubmit={handleSubmit} className="flex gap-4">
-        <input
-          type="text"
-          placeholder="Enter a long URL"
-          className="flex-1 px-4 py-2 border rounded"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-        />
-        <button
-          type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Shorten
-        </button>
-      </form>
+  const handleCopy = () => {
+    navigator.clipboard.writeText(shortUrl)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
-      {error && <p className="text-red-600 mt-4">{error}</p>}
+  return (
+    <main className="max-w-xl mx-auto mt-10 p-4">
+      <h1 className="text-2xl font-bold mb-4">URL Shortener</h1>
+      <input
+        type="text"
+        className="border p-2 w-full mb-2"
+        placeholder="Enter your URL"
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+      />
+      <button
+        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        onClick={handleShorten}
+      >
+        Shorten
+      </button>
+
       {shortUrl && (
-        <div className="mt-4">
-          <p className="text-green-600 font-semibold">Short URL:</p>
-          <a
-            href={shortUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-500 underline"
+        <div className="mt-4 flex items-center gap-2">
+          <span className="text-green-600 font-medium">{shortUrl}</span>
+          <button
+            onClick={handleCopy}
+            className="bg-gray-100 border rounded p-1 hover:bg-gray-200"
+            aria-label="Copy to clipboard"
           >
-            {shortUrl}
-          </a>
+            <Copy size={16} />
+          </button>
+          {copied && <span className="text-sm text-green-500 ml-2">Copied!</span>}
         </div>
       )}
-    </div>
+
+      {error && <p className="text-red-500 mt-2">{error}</p>}
+    </main>
   )
 }

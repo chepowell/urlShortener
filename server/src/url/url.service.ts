@@ -1,3 +1,4 @@
+// server/src/url/url.service.ts
 import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../../prisma/prisma.service'
 import { nanoid } from 'nanoid'
@@ -19,5 +20,9 @@ export class UrlService {
     })
 
     return url
+  }
+
+  async findBySlug(slug: string) {
+    return this.prisma.url.findUnique({ where: { slug } })
   }
 }

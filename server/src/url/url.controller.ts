@@ -1,6 +1,16 @@
-import { BadRequestException, Body, Controller, Headers, Post } from '@nestjs/common'
+// server/src/url/url.controller.ts
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  Post,
+  Res,
+} from '@nestjs/common'
 import { UrlService } from './url.service'
 import { ConfigService } from '@nestjs/config'
+import { Response } from 'express'
 
 @Controller()
 export class UrlController {
@@ -11,21 +21,27 @@ export class UrlController {
 
   @Post('urls')
   async createShortUrl(
-    @Body() body: any,
+    @Body('originalUrl') originalUrl: string,
     @Headers('x-user-id') userId: string
   ) {
-    const originalUrl = body?.originalUrl
-    console.log('📦 Received originalUrl:', originalUrl)
-    console.log('🧠 x-user-id header:', userId)
-
-    if (!userId || !originalUrl) {
-      throw new BadRequestException('Missing x-user-id header or originalUrl in body')
-    }
-
+    if (!userId) throw new Error('Missing x-user-id header')
     const result = await this.urlService.create(originalUrl, userId)
 
     return {
-      shortUrl: `${this.config.get('BASE_URL') || 'http://localhost:3000'}/${result.slug}`,
+      shortUrl: `${this.config.get('BASE_URL') || 'http://localhost:3000'}/${
+        result.slug
+      }`,
     }
+  }
+
+  @Get(':slug')
+  async redirect(@Param('slug') slug: string, @Res() res: Response) {
+    const result = await this.urlService.findBySlug(slug)
+
+    if (!result) {
+      return res.status(404).json({ message: 'Short URL not found' })
+    }
+
+    return res.redirect(result.originalUrl)
   }
 }

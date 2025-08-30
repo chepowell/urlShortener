@@ -1,11 +1,19 @@
-export async function apiFetch(input: RequestInfo, init: RequestInit = {}) {
+export const apiFetch = async (url: string, options: RequestInit = {}) => {
   const userId = localStorage.getItem('userId')
-  console.log('🧠 x-user-id being sent:', userId)
 
-  const headers = {
-    ...init.headers,
-    ...(userId ? { 'x-user-id': userId } : {}),
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
   }
 
-  return fetch(input, { ...init, headers })
+  if (userId) {
+    headers['x-user-id'] = userId
+  }
+
+  const res = await fetch(url, {
+    ...options,
+    headers,
+  })
+
+  return res
 }
