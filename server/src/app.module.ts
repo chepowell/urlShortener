@@ -25,6 +25,7 @@ export class AppModule {
     consumer
       .apply(UserMiddleware)
       .exclude(
+        { path: ':slug', method: RequestMethod.GET },
         { path: 'auth/signup', method: RequestMethod.POST },
         { path: 'auth/signin', method: RequestMethod.POST }
       )

@@ -5,34 +5,37 @@ import { createContext, useContext, useEffect, useState } from 'react'
 type UserContextType = {
   userId: string | null
   setUserId: (id: string | null) => void
-  ready: boolean
 }
 
-const UserContext = createContext<UserContextType | undefined>(undefined)
+const UserContext = createContext<UserContextType>({
+  userId: null,
+  setUserId: () => {},
+})
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
-  const [userId, setUserId] = useState<string | null>(null)
-  const [ready, setReady] = useState(false)
+  const [userId, setUserIdState] = useState<string | null>(null)
 
   useEffect(() => {
-    const stored = localStorage.getItem('userId')
-    if (stored) {
-      setUserId(stored)
-    }
-    setReady(true) // ✅ mark ready once we’ve checked localStorage
+    const storedId = localStorage.getItem('userId')
+    if (storedId) setUserIdState(storedId)
   }, [])
 
+  const setUserId = (id: string | null) => {
+    if (id) {
+      localStorage.setItem('userId', id)
+    } else {
+      localStorage.removeItem('userId')
+    }
+    setUserIdState(id)
+  }
+
   return (
-    <UserContext.Provider value={{ userId, setUserId, ready }}>
+    <UserContext.Provider value={{ userId, setUserId }}>
       {children}
     </UserContext.Provider>
   )
 }
 
 export function useUser() {
-  const context = useContext(UserContext)
-  if (!context) {
-    throw new Error('useUser must be used within a UserProvider')
-  }
-  return context
+  return useContext(UserContext)
 }

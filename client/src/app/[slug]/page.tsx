@@ -1,30 +1,29 @@
-// client/src/app/[slug]/page.tsx
-'use client'
+import { redirect } from 'next/navigation'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+interface Props {
+  params: { slug: string }
+}
 
-export default function RedirectPage({ params }: { params: { slug: string } }) {
-  const router = useRouter()
+export default async function RedirectPage(props: Props) {
+  const { slug } = await props.params
 
-  useEffect(() => {
-    const redirectToOriginalUrl = async () => {
-      try {
-        const res = await fetch(`http://localhost:5053/${params.slug}`)
-        const data = await res.json()
+  try {
+    const res = await fetch(`http://localhost:5053/${slug}`, {
+      cache: 'no-store',
+    })
 
-        if (res.ok && data.originalUrl) {
-          window.location.href = data.originalUrl
-        } else {
-          router.push('/not-found')
-        }
-      } catch (err) {
-        router.push('/not-found')
-      }
+    if (!res.ok) throw new Error('Redirect failed')
+
+    const data = await res.json()
+
+    if (data?.originalUrl) {
+      redirect(data.originalUrl)
+    } else {
+      redirect('/404')
     }
-
-    redirectToOriginalUrl()
-  }, [params.slug, router])
-
-  return <p>Redirecting...</p>
+  } catch (err) {
+    console.error('Redirection error:', err)
+    redirect('/404')
+  }
+}
 }
