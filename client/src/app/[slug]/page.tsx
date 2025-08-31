@@ -26,4 +26,3 @@ export default async function RedirectPage(props: Props) {
     redirect('/404')
   }
 }
-}

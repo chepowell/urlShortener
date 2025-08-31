@@ -1,3 +1,4 @@
+// server/src/url/url.controller.ts
 import {
   Body,
   Controller,
@@ -6,6 +7,7 @@ import {
   Param,
   Post,
   Res,
+  Req,
 } from '@nestjs/common'
 import { UrlService } from './url.service'
 import { ConfigService } from '@nestjs/config'
@@ -31,16 +33,19 @@ export class UrlController {
     }
   }
 
-  @Get('urls')
-  async getUserUrls(@Headers('x-user-id') userId: string) {
-    if (!userId) throw new Error('Missing x-user-id header')
+  @Get('/urls')
+  getUrls(@Req() req: Request) {
+    const userId = req.headers['x-user-id'] as string
+    console.log('GET /urls - userId:', userId)
+
     return this.urlService.findByUser(userId)
-  }
+}
 
   @Get(':slug')
   async redirect(@Param('slug') slug: string, @Res() res: Response) {
     const url = await this.urlService.findBySlug(slug)
     if (url) {
+      await this.urlService.incrementVisitCount(slug)
       return res.redirect(url.originalUrl)
     }
     return res.status(404).json({ message: 'URL not found' })

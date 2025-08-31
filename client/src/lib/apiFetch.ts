@@ -1,7 +1,10 @@
-export async function apiFetch(url: string, options: RequestInit = {}) {
+export async function apiFetch(path: string, options: RequestInit = {}) {
+  const baseUrl = 'http://localhost:5053'
   const userId = localStorage.getItem('userId')
+  console.log('apiFetch -> userId:', userId)
+  console.log('apiFetch -> path:', path)
 
-  return fetch(url, {
+  const res = await fetch(`${baseUrl}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -9,4 +12,6 @@ export async function apiFetch(url: string, options: RequestInit = {}) {
       ...(userId ? { 'x-user-id': userId } : {}),
     },
   })
+
+  return res
 }

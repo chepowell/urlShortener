@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common'
+import { Controller, Post, Body } from '@nestjs/common'
 import { AuthService } from './auth.service'
 
 @Controller('auth')
@@ -6,12 +6,14 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('signup')
-  signup(@Body() body: { email: string; password: string }) {
+  async signup(@Body() body: { email: string; password: string }) {
+    console.log('Signup request:', body)
     return this.authService.signup(body.email, body.password)
   }
 
   @Post('signin')
-  signin(@Body() body: { email: string; password: string }) {
+  async signin(@Body() body: { email: string; password: string }) {
+    console.log('Signin request:', body)
     return this.authService.signin(body.email, body.password)
   }
 }

@@ -1,42 +1,70 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { UrlRow } from '@/components/UrlRow'
 import { apiFetch } from '@/lib/apiFetch'
-import { useUser } from '../../app/context/UserContext'
-import UrlRow from '../../components/UrlRow'
+
+interface Url {
+  id: string
+  slug: string
+  originalUrl: string
+  visitCount: number
+  createdAt: string
+}
 
 export default function DashboardPage() {
-  const { userId } = useUser()
-  const [urls, setUrls] = useState<any[]>([])
-  const [error, setError] = useState<string | null>(null)
+  const [urls, setUrls] = useState<Url[]>([])
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  const fetchUrls = async () => {
+    try {
+      setError('')
+      setLoading(true)
+
+      console.log('Fetching URLs with userId:', localStorage.getItem('userId'))
+
+      const res = await apiFetch('/urls') // <-- this will include x-user-id from apiFetch
+      if (!res.ok) throw new Error('Failed to fetch URLs')
+
+      const data: Url[] = await res.json()
+      setUrls(data.sort((a, b) => b.visitCount - a.visitCount))
+    } catch (err) {
+      console.error(err)
+      setError('Failed to load URLs')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   useEffect(() => {
-    const fetchUrls = async () => {
-      try {
-        const res = await apiFetch('http://localhost:5053/urls')
-        const data = await res.json()
-        if (res.ok) {
-          setUrls(data)
-        } else {
-          throw new Error(data.message || 'Failed to fetch URLs')
-        }
-      } catch (err: any) {
-        setError(err.message)
-      }
-    }
-
     fetchUrls()
   }, [])
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">Your Shortened URLs</h1>
-      {error && <p className="text-red-500">{error}</p>}
-      <ul className="space-y-2">
-        {urls.map((url) => (
-          <UrlRow key={url.id} url={url} />
-        ))}
-      </ul>
+    <div className="max-w-3xl mx-auto p-6">
+      <h1 className="text-2xl font-bold mb-6">Your shortened URLs</h1>
+
+      {loading && <p>Loading...</p>}
+      {error && <p className="text-red-500 mb-4">{error}</p>}
+
+      {!loading && urls.length === 0 && !error ? (
+        <p>No URLs found.</p>
+      ) : (
+        <ul className="space-y-4">
+          {urls.map((url) => (
+            <UrlRow
+              key={url.id}
+              id={url.id}
+              slug={url.slug}
+              originalUrl={url.originalUrl}
+              visits={url.visitCount}
+              createdAt={url.createdAt}
+              onSlugUpdated={fetchUrls}
+            />
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

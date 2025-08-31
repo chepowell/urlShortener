@@ -1,4 +1,3 @@
-// File: /client/app/page.tsx
 'use client'
 
 import { useState } from 'react'
@@ -19,21 +18,17 @@ export default function HomePage() {
     setCopied(false)
 
     try {
-      new URL(url) // ✅ Validate it's a real URL
+      new URL(url)
     } catch {
       setError('Please enter a valid URL.')
       return
     }
 
     try {
-      const res = await apiFetch('http://localhost:5053/urls', {
+      const data = await apiFetch('/urls', {
         method: 'POST',
         body: JSON.stringify({ originalUrl: url }),
       })
-
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.message || 'Failed to shorten URL.')
-
       setShortUrl(data.shortUrl)
     } catch (err: any) {
       setError(err.message)

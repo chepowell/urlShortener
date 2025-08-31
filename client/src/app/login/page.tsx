@@ -1,63 +1,65 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useUser } from '@/app/context/UserContext'
 import { apiFetch } from '@/lib/apiFetch'
+import { useUser } from '../context/UserContext'
 
 export default function LoginPage() {
-  const { setUserId } = useUser()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const router = useRouter()
+  const { setUserId } = useUser()
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-
     try {
-      const res = await apiFetch('http://localhost:5053/auth/signin', {
+      const res = await apiFetch('/auth/signin', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       })
 
-      if (!res.ok) throw new Error('Login failed')
-
       const data = await res.json()
-      localStorage.setItem('userId', data.userId)
-      setUserId(data.userId)
-      router.refresh() // 
-      router.push('/')
+      console.log('SIGNIN RESPONSE:', res.status, data)
+      if (res.ok && data.userId) {
+        setUserId(data.userId)
+        router.push('/urls')
+      } else {
+        throw new Error('Login failed')
+      }
     } catch (err: any) {
       setError(err.message || 'Something went wrong')
     }
   }
 
   return (
-    <main className="p-6 max-w-md mx-auto">
+    <main className="max-w-md mx-auto mt-10 p-4">
       <h1 className="text-2xl font-bold mb-4">Login</h1>
-      <form onSubmit={handleLogin} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="email"
+          className="border p-2 w-full"
           placeholder="Email"
-          className="w-full border px-4 py-2 rounded"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
         <input
           type="password"
+          className="border p-2 w-full"
           placeholder="Password"
-          className="w-full border px-4 py-2 rounded"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
-        <button className="bg-blue-600 text-white px-4 py-2 rounded" type="submit">
+        <button
+          type="submit"
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 w-full"
+        >
           Sign In
         </button>
-        {error && <p className="text-red-500">{error}</p>}
       </form>
+      {error && <p className="text-red-500 mt-4">{error}</p>}
     </main>
   )
 }

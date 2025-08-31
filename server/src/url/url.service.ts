@@ -1,14 +1,14 @@
 // server/src/url/url.service.ts
-import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../../prisma/prisma.service';
-import { nanoid } from 'nanoid';
+import { Injectable } from '@nestjs/common'
+import { PrismaService } from '../../prisma/prisma.service'
+import { nanoid } from 'nanoid'
 
 @Injectable()
 export class UrlService {
   constructor(private prisma: PrismaService) {}
 
   async create(originalUrl: string, userId: string) {
-    const slug = nanoid(6);
+    const slug = nanoid(6)
     return this.prisma.url.create({
       data: {
         slug,
@@ -16,21 +16,21 @@ export class UrlService {
         userId,
         visitCount: 0,
       },
-    });
+    })
   }
 
-  // ✅ ADD THIS METHOD
+  
   async findByUser(userId: string) {
     return this.prisma.url.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
-    });
+      orderBy: { visitCount: 'desc' }, // sort by most visited for dashboard
+    })
   }
 
   async findBySlug(slug: string) {
     return this.prisma.url.findUnique({
       where: { slug },
-    });
+    })
   }
 
   async incrementVisitCount(slug: string) {
@@ -39,6 +39,6 @@ export class UrlService {
       data: {
         visitCount: { increment: 1 },
       },
-    });
+    })
   }
 }

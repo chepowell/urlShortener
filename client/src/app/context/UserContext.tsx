@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 
-type UserContextType = {
+interface UserContextType {
   userId: string | null
   setUserId: (id: string | null) => void
 }
@@ -12,12 +12,14 @@ const UserContext = createContext<UserContextType>({
   setUserId: () => {},
 })
 
-export function UserProvider({ children }: { children: React.ReactNode }) {
+export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [userId, setUserIdState] = useState<string | null>(null)
 
   useEffect(() => {
     const storedId = localStorage.getItem('userId')
-    if (storedId) setUserIdState(storedId)
+    if (storedId) {
+      setUserIdState(storedId)
+    }
   }, [])
 
   const setUserId = (id: string | null) => {
@@ -36,6 +38,4 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-export function useUser() {
-  return useContext(UserContext)
-}
+export const useUser = () => useContext(UserContext)

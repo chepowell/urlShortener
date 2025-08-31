@@ -4,23 +4,33 @@ import * as bcrypt from 'bcrypt'
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) {}
 
   async signup(email: string, password: string) {
-    const hash = await bcrypt.hash(password, 10)
+    const hashed = await bcrypt.hash(password, 10)
     const user = await this.prisma.user.create({
-      data: { email, password: hash },
+      data: { email, password: hashed },
     })
     return { userId: user.id }
   }
 
   async signin(email: string, password: string) {
     const user = await this.prisma.user.findUnique({ where: { email } })
-    if (!user) throw new Error('User not found')
 
-    const match = await bcrypt.compare(password, user.password)
-    if (!match) throw new Error('Invalid password')
+    if (!user || !user.password) {
+      throw new Error('Invalid credentials')
+    }
 
-    return { userId: user.id }
+    try {
+      const match = await bcrypt.compare(password, user.password)
+      if (!match) {
+        throw new Error('Invalid credentials')
+      }
+
+      return { userId: user.id }
+    } catch (err) {
+      console.error('Error comparing password:', err)
+      throw new Error('Server error')
+    }
   }
 }
