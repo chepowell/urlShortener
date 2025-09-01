@@ -1,6 +1,5 @@
 // server/src/url/url.service.ts
-
-import { Injectable } from '@nestjs/common'
+import { Injectable, BadRequestException } from '@nestjs/common'
 import { PrismaService } from '../../prisma/prisma.service'
 import { nanoid } from 'nanoid'
 
@@ -23,7 +22,7 @@ export class UrlService {
   async findByUser(userId: string) {
     return this.prisma.url.findMany({
       where: { userId },
-      orderBy: { visitCount: 'desc' }, // sort by most visited for dashboard
+      orderBy: { visitCount: 'desc' },
     })
   }
 
@@ -42,18 +41,15 @@ export class UrlService {
     })
   }
 
-  async updateSlug(id: string, slug: string) {
-    try {
-      return await this.prisma.url.update({
-        where: { id },
-        data: { slug },
-      })
-    } catch (err: any) {
-      if (err.code === 'P2002') {
-        // Prisma unique constraint violation
-        throw new Error('Slug already exists')
-      }
-      throw err
+  async updateSlug(id: string, newSlug: string) {
+    const existing = await this.prisma.url.findUnique({ where: { slug: newSlug } })
+    if (existing) {
+      throw new BadRequestException('Slug already taken')
     }
+
+    return this.prisma.url.update({
+      where: { id },
+      data: { slug: newSlug },
+    })
   }
 }

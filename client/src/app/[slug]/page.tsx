@@ -4,8 +4,8 @@ interface Props {
   params: { slug: string }
 }
 
-export default async function RedirectPage(props: Props) {
-  const { slug } = await props.params
+export default async function RedirectPage({ params }: Props) {
+  const { slug } = params
 
   try {
     const res = await fetch(`http://localhost:5053/${slug}`, {
