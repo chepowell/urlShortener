@@ -4,14 +4,14 @@ services:
   server:
     build: ./server
     ports:
-      - "5053:3000"
+      - "5053:5053"
     volumes:
       - ./server:/app
     depends_on:
       - postgres
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/shortener
-      - NEXT_PUBLIC_API_URL=http://server:3000
+      - NEXT_PUBLIC_API_URL=http://server:5053
 
   client:
     build: ./client
@@ -22,7 +22,7 @@ services:
     depends_on:
       - server
     environment:
-    - NEXT_PUBLIC_API_URL=http://server:3000
+      - NEXT_PUBLIC_API_URL=http://server:5053
 
   postgres:
     image: postgres:15
@@ -33,6 +33,8 @@ services:
       POSTGRES_DB: shortener
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
 volumes:
   postgres_data:

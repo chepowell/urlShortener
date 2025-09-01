@@ -25,12 +25,12 @@ export class AppModule {
       .exclude(
         { path: ':slug', method: RequestMethod.GET },
         { path: 'auth/signup', method: RequestMethod.POST },
-        { path: 'auth/signin', method: RequestMethod.POST }
+        { path: 'auth/signin', method: RequestMethod.POST },
       )
       .forRoutes(
         { path: 'urls', method: RequestMethod.GET },
         { path: 'urls', method: RequestMethod.POST },
-        { path: 'urls/:id', method: RequestMethod.PATCH }
+        { path: 'urls/:id', method: RequestMethod.PATCH },
       );
   }
 }

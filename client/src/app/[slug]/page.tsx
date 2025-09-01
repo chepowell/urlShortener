@@ -1,14 +1,16 @@
 import { redirect } from 'next/navigation'
 
-interface Props {
-  params: { slug: string }
+type Props = {
+  params: {
+    slug: string
+  }
 }
 
 export default async function RedirectPage({ params }: Props) {
   const { slug } = params
 
   try {
-    const res = await fetch(`http://localhost:5053/${slug}`, {
+    const res = await fetch(`http://server:3000/${slug}`, {
       cache: 'no-store',
     })
 
@@ -22,7 +24,6 @@ export default async function RedirectPage({ params }: Props) {
       redirect('/404')
     }
   } catch (err) {
-    console.error('Redirection error:', err)
     redirect('/404')
   }
 }

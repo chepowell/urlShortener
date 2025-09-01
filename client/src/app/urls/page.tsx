@@ -22,7 +22,7 @@ export default function DashboardPage() {
       setError('')
       setLoading(true)
 
-      console.log('Fetching URLs with userId:', localStorage.getItem('userId'))
+    
 
       const res = await apiFetch('/urls') // includes x-user-id
       if (!res.ok) throw new Error('Failed to fetch URLs')

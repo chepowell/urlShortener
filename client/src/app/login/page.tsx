@@ -22,7 +22,6 @@ export default function LoginPage() {
       })
 
       const data = await res.json()
-      console.log('SIGNIN RESPONSE:', res.status, data)
       if (res.ok && data.userId) {
         setUserId(data.userId)
         router.push('/urls')
