@@ -1,53 +1,51 @@
 // server/src/url/url.controller.ts
 import {
-  Body,
   Controller,
-  Get,
-  Headers,
-  Param,
   Post,
-  Res,
+  Body,
+  Get,
+  Param,
+  Patch,
   Req,
+  Res,
+  BadRequestException,
 } from '@nestjs/common'
 import { UrlService } from './url.service'
-import { ConfigService } from '@nestjs/config'
 import { Response } from 'express'
 
-@Controller()
+@Controller('urls')
 export class UrlController {
-  constructor(
-    private readonly urlService: UrlService,
-    private readonly config: ConfigService
-  ) {}
+  constructor(private readonly urlService: UrlService) {}
 
-  @Post('urls')
-  async createShortUrl(
-    @Body('originalUrl') originalUrl: string,
-    @Headers('x-user-id') userId: string
-  ) {
-    if (!userId) throw new Error('Missing x-user-id header')
-    const result = await this.urlService.create(originalUrl, userId)
-
-    return {
-      shortUrl: `${this.config.get('BASE_URL') || 'http://localhost:3000'}/${result.slug}`,
-    }
+  @Post()
+  async create(@Body() body: any, @Req() req: any) {
+    const { originalUrl } = body
+    const userId = req.userId
+    if (!userId) throw new BadRequestException('Missing userId')
+    return this.urlService.create(originalUrl, userId)
   }
 
-  @Get('/urls')
-  getUrls(@Req() req: Request) {
-    const userId = req.headers['x-user-id'] as string
-    console.log('GET /urls - userId:', userId)
-
+  @Get()
+  async getUrls(@Req() req: any) {
+    const userId = req.userId
     return this.urlService.findByUser(userId)
-}
+  }
 
   @Get(':slug')
   async redirect(@Param('slug') slug: string, @Res() res: Response) {
     const url = await this.urlService.findBySlug(slug)
-    if (url) {
-      await this.urlService.incrementVisitCount(slug)
-      return res.redirect(url.originalUrl)
+    if (!url) {
+      return res.status(404).json({ message: 'URL not found' })
     }
-    return res.status(404).json({ message: 'URL not found' })
+
+  await this.urlService.incrementVisitCount(slug)
+  return res.redirect(url.originalUrl)
+}
+
+  @Patch(':id')
+  async updateSlug(@Param('id') id: string, @Body() body: any) {
+    const { slug } = body
+    if (!slug) throw new BadRequestException('Missing slug')
+    return this.urlService.updateSlug(id, slug)
   }
 }
