@@ -19,12 +19,20 @@ export class UrlService {
     })
   }
 
-  async findByUser(userId: string) {
-    return this.prisma.url.findMany({
-      where: { userId },
-      orderBy: { visitCount: 'desc' },
-    })
-  }
+// server/src/url/url.service.ts
+async findByUser(userId: string) {
+  return this.prisma.url.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      slug: true,
+      originalUrl: true,
+      createdAt: true,
+      visitCount: true,
+    },
+  })
+}
 
   async findBySlug(slug: string) {
     return this.prisma.url.findUnique({

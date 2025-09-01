@@ -24,7 +24,7 @@ export default function DashboardPage() {
 
       console.log('Fetching URLs with userId:', localStorage.getItem('userId'))
 
-      const res = await apiFetch('/urls') // <-- this will include x-user-id from apiFetch
+      const res = await apiFetch('/urls') // includes x-user-id
       if (!res.ok) throw new Error('Failed to fetch URLs')
 
       const data: Url[] = await res.json()
@@ -58,7 +58,7 @@ export default function DashboardPage() {
               id={url.id}
               slug={url.slug}
               originalUrl={url.originalUrl}
-              visits={url.visitCount}
+              visitCount={url.visitCount} // ✅ FIXED
               createdAt={url.createdAt}
               onSlugUpdated={fetchUrls}
             />
