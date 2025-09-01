@@ -29,6 +29,7 @@ export default function LoginPage() {
       } else {
         throw new Error('Login failed')
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || 'Something went wrong')
     }

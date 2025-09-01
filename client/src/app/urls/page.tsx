@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { UrlRow } from '@/components/UrlRow'
+import { UrlRow } from '@/components/urlRow'
 import { apiFetch } from '@/lib/apiFetch'
 
 interface Url {

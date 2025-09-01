@@ -28,6 +28,7 @@ export default function SignupPage() {
       } else {
         throw new Error('Signup failed')
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || 'Something went wrong')
     }

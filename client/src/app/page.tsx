@@ -30,6 +30,7 @@ export default function ShortenPage() {
       const baseUrl = 'http://localhost:5053'
       setShortUrl(`${baseUrl}/${data.slug}`)
       setOriginalUrl('')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message)
     }
