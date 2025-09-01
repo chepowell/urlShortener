@@ -1,26 +1,21 @@
-import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common'
-import { ConfigModule } from '@nestjs/config'
-import { ThrottlerModule } from '@nestjs/throttler'
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
+import { ThrottlerModule } from '@nestjs/throttler';
 
-import { UrlModule } from './url/url.module'
-import { AuthModule } from './auth/auth.module'
-import { RedirectModule } from './redirect/redirect.module' // ✅ ADD THIS
-import { UserMiddleware } from './middleware/user.middleware'
+import { UrlModule } from './url/url.module';
+import { AuthModule } from './auth/auth.module';
+import { RedirectModule } from './redirect/redirect.module';
+import { UserMiddleware } from './middleware/user.middleware';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          limit: 10,
-          ttl: 60,
-        },
-      ],
+      throttlers: [{ limit: 10, ttl: 60 }],
     }),
     UrlModule,
     AuthModule,
-    RedirectModule, // ✅ AND THIS
+    RedirectModule,
   ],
 })
 export class AppModule {
@@ -33,10 +28,9 @@ export class AppModule {
         { path: 'auth/signin', method: RequestMethod.POST }
       )
       .forRoutes(
-        { path: 'urls', method: RequestMethod.POST },
         { path: 'urls', method: RequestMethod.GET },
-        { path: ':slug', method: RequestMethod.GET },
-        { path: ':slug/slug', method: RequestMethod.PATCH }
-      )
+        { path: 'urls', method: RequestMethod.POST },
+        { path: 'urls/:id', method: RequestMethod.PATCH }
+      );
   }
 }

@@ -26,9 +26,10 @@ export class UrlController {
   }
 
   @Get()
-  async getUrls(@Req() req: any) {
-    const userId = req.userId
-    return this.urlService.findByUser(userId)
+  getUserUrls(@Req() req: any) {
+    const userId = req.userId;
+    console.log('📥 Controller received userId:', userId);
+    return this.urlService.findByUser(userId);
   }
 
   @Get(':slug')

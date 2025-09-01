@@ -21,6 +21,8 @@ export class UrlService {
 
 // server/src/url/url.service.ts
 async findByUser(userId: string) {
+  console.log('🔍 Prisma query with userId:', userId);
+
   return this.prisma.url.findMany({
     where: { userId },
     orderBy: { createdAt: 'desc' },
@@ -31,7 +33,7 @@ async findByUser(userId: string) {
       createdAt: true,
       visitCount: true,
     },
-  })
+  });
 }
 
   async findBySlug(slug: string) {

@@ -8,8 +8,9 @@ export class UserMiddleware implements NestMiddleware {
 
     if (typeof userId === 'string') {
       (req as any).userId = userId;
+      console.log('🧩 Middleware received x-user-id:', userId)
     } else {
-      (req as any).userId = undefined;
+      console.log('🧩 Middleware received NO userId');
     }
 
     next();
